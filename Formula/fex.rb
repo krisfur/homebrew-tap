@@ -1,8 +1,8 @@
 class Fex < Formula
   desc "Universal interactive package search TUI"
   homepage "https://github.com/krisfur/fex"
-  url "https://github.com/krisfur/fex/archive/refs/tags/v0.6.0.tar.gz"
-  sha256 "6cc0bdf1dcd3999f18910a480ea06c0a4c097388c77a41520a34d5fa07986f92"
+  url "https://github.com/krisfur/fex/archive/refs/tags/v0.6.1.tar.gz"
+  sha256 "6484edee697392a645ab9f9ee73e26765c0f759ac07d97cfb03a16a1fc07352b"
   license "MIT"
 
   depends_on "rust" => :build

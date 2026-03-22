@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 <version>" >&2
+  exit 1
+fi
+
+input_version="$1"
+version="${input_version#v}"
+tag="v${version}"
+formula="Formula/fex.rb"
+url="https://github.com/krisfur/fex/archive/refs/tags/${tag}.tar.gz"
+
+if [ ! -f "$formula" ]; then
+  echo "missing $formula" >&2
+  exit 1
+fi
+
+tmp_tarball="$(mktemp)"
+trap 'rm -f "$tmp_tarball"' EXIT
+
+echo "Fetching $url"
+curl -fL "$url" -o "$tmp_tarball"
+sha256="$(shasum -a 256 "$tmp_tarball" | awk '{print $1}')"
+
+python3 - "$formula" "$url" "$sha256" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+formula_path = Path(sys.argv[1])
+url = sys.argv[2]
+sha256 = sys.argv[3]
+text = formula_path.read_text()
+
+text, url_count = re.subn(r'^  url ".*"$', f'  url "{url}"', text, count=1, flags=re.M)
+text, sha_count = re.subn(r'^  sha256 ".*"$', f'  sha256 "{sha256}"', text, count=1, flags=re.M)
+
+if url_count != 1 or sha_count != 1:
+    raise SystemExit("failed to update formula fields")
+
+formula_path.write_text(text)
+PY
+
+echo
+echo "Updated $formula"
+echo "Version: $version"
+echo "SHA256:  $sha256"
+echo
+git diff -- "$formula"
